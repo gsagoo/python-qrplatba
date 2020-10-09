@@ -11,7 +11,7 @@ from qrplatba.svg import QRPlatbaSVGImage
 class QRPlatbaGenerator:
     RE_ACCOUNT = re.compile(r'(?P<ba>\d+(?=-))?(?P<a>\d+)/(?P<b>\d{4})')
 
-    def __init__(self, account, amount=None, currency=None, x_vs=None, x_ss=None, x_ks=None, alternate_accounts=None, recipient_name=None,
+    def __init__(self, account=None, amount=None, currency=None, x_vs=None, x_ss=None, x_ks=None, alternate_accounts=None, recipient_name=None,
                  due_date=None, payment_type=None, message=None, notification_type=None, notification_address=None, x_per=None, x_id=None,
                  x_url=None, reference=None):
         """
@@ -97,44 +97,44 @@ class QRPlatbaGenerator:
     @property
     def _amount(self):
         if self.amount is not None:
-            return "AM:{:.2f}*".format(self.amount)
+            return "\nAmount due: £{:.2f} ".format(self.amount)
         return ""
 
     @property
     def _due_date(self):
         if self.due_date is not None:
-            str_part = 'DT:{}*'
+            str_part = '\nDate: '
             if isinstance(self.due_date, datetime):
-                return str_part.format(self.due_date.date().isoformat()).replace('-', '')
+                return str_part + self.due_date.strftime("%d %m %Y")
             if isinstance(self.due_date, date):
-                return str_part.format(self.due_date.isoformat()).replace('-', '')
+                return str_part + self.due_date.strftime("%d %m %Y")
             return str_part.format(self.due_date)
         return ''
 
     def _format_item_string(self, item, name):
         if item is not None:
-            return "{name}:{value}*".format(name=name, value=item)
+            return "\n{name}: {value}".format(name=name, value=item)
         return ''
 
     def get_text(self):
-        return "SPD*1.0*{ACC}{ALTACC}{AM}{CC}{RF}{RN}{DT}{PT}{MSG}{NT}{NTA}{XPER}{XVS}{XSS}{XKS}{XID}{XURL}".format(
+        return "Lesson information. \n{MSG}{DT}{PT}{XURL}{NTA}{RN}{RF}{ACC}{ALTACC}{XSS}{AM}{CC}{NT}{XPER}{XVS}{XKS}{XID}".format(
             ACC=self._account,
             ALTACC=self._alternate_accounts,
             AM=self._amount,
             CC=self._format_item_string(self.currency, 'CC'),
-            RF=self._format_item_string(self.reference, 'RF'),
-            RN=self._format_item_string(self.recipient_name, 'RN'),
+            RF=self._format_item_string(self.reference, 'Ref'),
+            RN=self._format_item_string(self.recipient_name, 'To '),
             DT=self._due_date,
-            PT=self._format_item_string(self.payment_type, 'PT'),
+            PT=self._format_item_string(self.payment_type, 'From'),
             MSG=self._format_item_string(self.message, 'MSG'),
             NT=self._format_item_string(self.notification_type, 'NT'),
-            NTA=self._format_item_string(self.notification_address, 'NTA'),
+            NTA=self._format_item_string(self.notification_address, 'Email'),
             XPER=self._format_item_string(self.x_per, 'X-PER'),
             XVS=self._format_item_string(self.x_vs, 'X-VS'),
-            XSS=self._format_item_string(self.x_ss, 'X-SS'),
+            XSS=self._format_item_string(self.x_ss, 'Lesson days'),
             XKS=self._format_item_string(self.x_ks, 'X-KS'),
             XID=self._format_item_string(self.x_id, 'X-ID'),
-            XURL=self._format_item_string(self.x_url, 'X-URL')
+            XURL=self._format_item_string(self.x_url, 'URL')
         ).rstrip('*')
 
     def make_image(self, border=2, error_correction=qrcode.constants.ERROR_CORRECT_M):
